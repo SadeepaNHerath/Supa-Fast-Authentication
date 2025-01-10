@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException, Depends
-from auth import verify_token
-from models import User, Login
-from supabase import create_client, Client
 import os
+
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from supabase import create_client, Client
+
+from models import User, Login
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,6 +21,7 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 # Register user route
 @app.post("/register/")
@@ -51,42 +53,70 @@ async def register_user(user: User):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # Login route
 @app.post("/login/")
 async def login_user(login: Login):
     """
     Logs in a user using Supabase authentication.
+
+    Parameters:
+    - login (Login): A Login object containing the user's email and password.
+
+    Returns:
+    - dict: A dictionary containing the user's information, including their ID, email, and access token.
+
+    Raises:
+    - HTTPException: If the login credentials are invalid or if there is an error during the login process.
     """
-    try:
-        # Authenticate user with Supabase
-        auth_response = supabase.auth.sign_in_with_password(
-            {
-                "email": login.email,
-                "password": login.password
-            }
-        )
 
-        if auth_response.user is None:
-            raise HTTPException(status_code=401, detail="Invalid login credentials")
 
-        user = auth_response.user
-        session = auth_response.session
-
-        return {
-            "message": "Login successful",
-            "user_id": user.id,
-            "email": user.email,
-            "access_token": session.access_token
+try:
+    # Authenticate user with Supabase
+    auth_response = supabase.auth.sign_in_with_password(
+        {
+            "email": login.email,
+            "password": login.password
         }
+    )
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    if auth_response.user is None:
+        raise HTTPException(status_code=401, detail="Invalid login credentials")
+
+    user = auth_response.user
+    session = auth_response.session
+
+    return {
+        "message": "Login successful",
+        "user_id": user.id,
+        "email": user.email,
+        "access_token": session.access_token
+    }
+
+except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
+
 
 # Protected route
 @app.get("/protected/")
 async def protected_route(user: dict = Depends(verify_token)):
+
+
     """
-    This is a protected route that only logged-in users can access.
-    It returns the user's information.
+
+
+    This is a
+    protected
+    route
+    that
+    only
+    logged - in users
+    can
+    access.
+    It
+    returns
+    the
+    user
+    's information.
     """
-    return {"message": "Access granted", "user": user}
+return {"message": "Access granted", "user": user}

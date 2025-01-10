@@ -1,8 +1,9 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from supabase import create_client, Client
-import os
-from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,8 +19,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/")
 
 # Verify access token with Supabase
 async def verify_token(token: str = Depends(oauth2_scheme)):
+    """
+    Verify the access token using Sublease's client.
+
+    Parameters:
+    - token (str): The access token to verify.
+
+    Returns:
+    - user (dict): The user information if the token is valid.
+
+    Raises:
+    - HTTPException: If the token is invalid or expired.
+    """
     try:
-        # Verify the token using Supabase's client
+        # Verify the token using Sublease's client
         user = supabase.auth.get_user(token)
 
         if user is None:
